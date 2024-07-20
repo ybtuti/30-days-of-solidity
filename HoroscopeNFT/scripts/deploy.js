@@ -1,14 +1,11 @@
 const hre = require("hardhat");
  
 async function main() {
-  console.log("Deploying contract...");
-
-  const horoscope = await hre.ethers.deployContract("contracts/horoscopeNFT.sol:horoscopeNFT");
-  
- 
-  console.log("Contract deployed to address:", horoscope.target);
+  const Horoscope = await ethers.deployContract("contracts/horoscopeNFT.sol:horoscopeNFT");
+  const horoscope = await Horoscope.waitForDeployment();
+  console.log("Deploying Contract...")
+  console.log("Contract deployed to address:",  await horoscope.getAddress());
 }
- 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main()
