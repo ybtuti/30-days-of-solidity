@@ -1,31 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+ 
 import { useEffect, useState } from "react";
-import { Contract, providers } from "ethers";
-
-const [date, setDate] = useState("1992-08-31");
-const [zodiacSign, setZodiacSign] = useState(null);
-
+import { Contract, BrowserProvider } from "ethers";
+import NFT from "./abi/horoscopeNFT.json";
+ 
+const NFT_CONTRACT_ADDRESS = "0x979CCbA756D0AF02390cBCd039D186935Bd8C815";
+ 
 function App() {
   const [isWalletInstalled, setIsWalletInstalled] = useState(false);
-
+  const [date, setDate] = useState("1992-08-31");
+  const [zodiacSign, setZodiacSign] = useState(null);
+ 
   // state for whether the app is minting or not.
   const [isMinting, setIsMinting] = useState(false);
-
+ 
   const [NFTContract, setNFTContract] = useState(null);
-
+ 
   const [account, setAccount] = useState(null);
-
+ 
   useEffect(() => {
     if (window.ethereum) {
       setIsWalletInstalled(true);
     }
   }, []);
-
+ 
   function handleDateInput({ target }) {
     setDate(target.value);
   }
-
+ 
   async function connectWallet() {
     window.ethereum
       .request({
@@ -38,15 +40,12 @@ function App() {
         alert("Something went wrong");
       });
   }
-
+ 
   useEffect(() => {
     calculateZodiacSign(date);
   }, [date]);
-
-  function hadleDateInput({ target}) {
-    setDate(target.value);
-  }
-
+ 
+ 
   function calculateZodiacSign(date) {
     let dateObject = new Date(date);
     let day = dateObject.getDate();
@@ -125,42 +124,85 @@ function App() {
       }
     }
   }
+ 
+  useEffect(() => {
+    function initNFTContract() {
+      const provider = new BrowserProvider(window.ethereum);
+      provider.getSigner().then((signer) => {
+        setNFTContract(new Contract(NFT_CONTRACT_ADDRESS, NFT.abi, signer));
+      }).catch((error) => {
+        console.error("Error initializing contract:", error);
+      });
+    }
+    initNFTContract();
+  }, [account]);
+ 
+  async function mintNFT() {
+    setIsMinting(true);
+    try {
+      const transaction = await NFTContract.mintNFT(account, zodiacSign);
+  
+      // Wait for the transaction to be confirmed
+      await transaction.wait();
+  
+      // Transaction is confirmed, you can perform any additional actions here if needed
+    } catch (e) {
+      console.error(e);
+    } finally {
+      alert("Minting Successful")
+      setIsMinting(false);
+    }
+  }
+  
+  if (account === null) {
+    return (
+      <div className="App">
+        {" "}
+        <br />
+        {isWalletInstalled ? (
+          <button onClick={connectWallet}>Connect Wallet</button>
+        ) : (
+          <p>Install Metamask wallet</p>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="App">
       <h1>Horoscope NFT Minting Dapp</h1>
-      <p> Connected as: {account}</p>
-
+      <p>Connected as: {account}</p>
+ 
       <input onChange={handleDateInput} value={date} type="date" id="dob" />
       <br />
       <br />
       {zodiacSign ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          preerveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="xMinYMin meet"
           viewBox="0 0 300 300"
           width="400px"
           height="400px"
         >
           <style>{`.base { fill: white; font-family: serif; font-size: 24px;`}</style>
           <rect width="100%" height="100%" fill="black" />
-          <text 
-            x="50%" 
-            y="50%" 
+          <text
+            x="50%"
+            y="50%"
             class="base"
-            dorminant-baseline="middle"
+            dominant-baseline="middle"
             text-anchor="middle"
           >
             {zodiacSign}
           </text>
         </svg>
       ) : null}
-
+ 
       <br />
       <br />
-      <button disables={isMinting} onClick={mintNFT}>
-        {isMinting ? "Minting..." : "Mint NFT"}
+      <button disabled={isMinting} onClick={mintNFT}>
+        {isMinting ? "Minting..." : "Mint"}
       </button>
-      </div>
+    </div>
   );
 }
 export default App;
