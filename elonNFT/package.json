@@ -4,6 +4,7 @@
     "hardhat": "^2.22.6"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^0.15.5",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0"
   }
 }
